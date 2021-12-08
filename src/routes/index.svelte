@@ -1,4 +1,26 @@
+<script context="module">
+    export const prerender = true;
+
+	import { getData } from "./utils.js";
+
+	export async function load({ page, fetch, session, stuff }) {
+        const datasetNames = ["region", "district"];
+        let datasets = {};
+        for (let geo of datasetNames) {
+            //let arr = await (await fetch(`./data/data_${geo}.json`)).json();
+            let arr = await getData(`./data/data_${geo}.csv`, fetch)
+            datasets[geo] = arr;
+        }
+        let topojsonData = await (await fetch(`./data/geo_lad2021.json`)).json()
+        return {
+            props: {datasets, datasetNames, topojsonData}
+        };
+    }
+</script>
+
 <script>
+	export let datasetNames, datasets, topojsonData;
+
 	// CORE IMPORTS
 	import { setContext, onMount } from "svelte";
 	import { getMotion } from "./utils.js";
@@ -23,9 +45,9 @@
 	import { Map, MapSource, MapLayer, MapTooltip } from "@onsvisual/svelte-maps";
 
 	// DEMO-SPECIFIC DATA IMPORTS
-	import topojsonData from "$lib/data/geo_lad2021.json";
-	import dataRegion from "$lib/data/data_region.json";
-	import dataDistrict from "$lib/data/data_district.json";
+	//import topojsonData from "$lib/data/geo_lad2021.json";
+	//import dataRegion from "$lib/data/data_region.json";
+	//import dataDistrict from "$lib/data/data_district.json";
 
 	// CORE CONFIG (COLOUR THEMES)
 	// Set theme globally (options are 'light', 'dark' or 'lightblue')
@@ -46,8 +68,6 @@
 
 	// DEMO-SPECIFIC CONFIG
 	// Constants
-	const datasetNames = ["region", "district"];
-	const datasets = {region: dataRegion, district: dataDistrict};
 	const topojson = "/data/geo_lad2021.json";
 	const mapstyle = "https://bothness.github.io/ons-basemaps/data/style-omt.json";
 	const mapbounds = {
@@ -82,7 +102,7 @@
 
 	// Functions for chart and map on:select and on:hover events
 	function doSelect(e) {
-		console.log(e);
+		//console.log(e);
 		selected = e.detail.id;
 		if (e.detail.feature) fitById(selected); // Fit map if select event comes from map
 	}
@@ -188,6 +208,7 @@
 	// INITIALISATION CODE
 	datasetNames.forEach(geo => {
         const arr = datasets[geo];
+        //console.log({geo, arr});
         let meta = arr.map(d => ({
             code: d.code,
             name: d.name,
@@ -236,7 +257,7 @@
             });
         });
         data[geo].timeseries = timeseries;
-        console.log(timeseries);
+        //console.log(timeseries);
 	});
 
 	useTopo(topojsonData, 'geog')

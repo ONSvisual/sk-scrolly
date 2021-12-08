@@ -14,7 +14,7 @@ export function getMotion() {
 }
 
 // DEMO-SPECIFIC FUNCTIONS
-export async function getData(url) {
+export async function getData(url, fetch) {
   let response = await fetch(url);
   let string = await response.text();
 	let data = await csvParse(string, autoType);

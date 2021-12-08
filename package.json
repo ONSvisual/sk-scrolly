@@ -13,17 +13,20 @@
   "author": "Ahmad Barclay",
   "license": "MIT",
   "devDependencies": {
+    "@onsvisual/svelte-charts": "^0.1.25",
+    "@onsvisual/svelte-maps": "^0.0.14",
+    "@sveltejs/adapter-static": "next",
     "@sveltejs/adapter-auto": "next",
     "@sveltejs/kit": "next",
-    "prettier": "^2.4.1",
-    "prettier-plugin-svelte": "^2.4.0",
-    "svelte": "^3.44.0",
     "@turf/bbox": "^6.5.0",
     "d3-dsv": "latest",
     "debounce": "^1.2.0",
     "gh-pages": "^3.1.0",
     "mapbox-gl": "1.13.1",
     "parse-color": "^1.0.0",
+    "prettier": "^2.4.1",
+    "prettier-plugin-svelte": "^2.4.0",
+    "svelte": "^3.44.0",
     "topojson-client": "^3.1.0"
   },
   "__comment__": {
