@@ -12,7 +12,7 @@
 		wide: 500,
 	};
 
-	export let theme = getContext("theme");
+	export let theme = 'dark'; // getContext("theme");
 	export let col = "medium";
 	export let grid = null;
 	export let caption = null;

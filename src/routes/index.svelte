@@ -3,7 +3,7 @@
 
 	import { getData } from "./utils.js";
 
-	export async function load({ page, fetch, session, stuff }) {
+	export async function load({ url, params, fetch, session, stuff }) {
         const datasetNames = ["region", "district"];
         let datasets = {};
         for (let geo of datasetNames) {
@@ -22,11 +22,11 @@
 	export let datasetNames, datasets, topojsonData;
 
 	// CORE IMPORTS
-	import { setContext, onMount } from "svelte";
+	import { /*setContext,*/ onMount } from "svelte";
 	import { getMotion } from "./utils.js";
 	import { themes } from "./config.js";
-	import ONSHeader from "./layout/ONSHeader.svelte";
-	import ONSFooter from "./layout/ONSFooter.svelte";
+	//import ONSHeader from "./layout/ONSHeader.svelte";
+	// import ONSFooter from "./layout/ONSFooter.svelte";
 	import Header from "./layout/Header.svelte";
 	import Section from "./layout/Section.svelte";
 	import Media from "./layout/Media.svelte";
@@ -52,8 +52,9 @@
 	// CORE CONFIG (COLOUR THEMES)
 	// Set theme globally (options are 'light', 'dark' or 'lightblue')
 	let theme = "light";
-	setContext("theme", theme);
+	//setContext("theme", theme);
 	setColors(themes, theme);
+	let ssr = true;
 
 	// CONFIG FOR SCROLLER COMPONENTS
 	// Config
@@ -267,7 +268,7 @@
 	});
 </script>
 
-<ONSHeader filled={true} center={false} />
+<!-- <ONSHeader filled={true} center={false} /> -->
 
 <Header bgcolor="#206095" bgfixed={true} theme="dark" center={false} short={true}>
 	<h1>This is the title of the article</h1>
@@ -291,7 +292,7 @@
 	</p>
 </Filler>
 
-<Section>
+<Section {theme}>
 	<h2>This is a section title</h2>
 	<p>
 		This is a short paragraph of text to demonstrate the standard "medium" column width, font size and line spacing of the template.
@@ -304,9 +305,9 @@
 	</blockquote>
 </Section>
 
-<Divider/>
+<Divider {theme}/>
 
-<Section>
+<Section {theme}>
 	<h2>Embedded charts or media</h2>
 	<p>
 		Below is an embedded chart. It is set to the same width as the column, "medium" (680px), but could also be "narrow" (540px), "wide" (980px) or "full" width. All options are responsive to fit the width of narrow screens.
@@ -315,11 +316,13 @@
 
 {#if data.region.indicators}
 <Media
+    {theme}
 	col="medium"
 	caption="Source: ONS mid-year population estimates."
 >
 	<div class="chart-sml">
 		<BarChart
+		    ssr={true}
 			data={[...data.region.indicators].sort((a, b) => a.pop - b.pop)}
 			xKey="pop" yKey="name"
 			snapTicks={false}
@@ -330,9 +333,9 @@
 </Media>
 {/if}
 
-<Divider/>
+<Divider {theme}/>
 
-<Section>
+<Section {theme}>
 	<h2>Gridded charts or media</h2>
 	<p>
 		Below is a grid that can contain charts or any other kind of visual media. The grid can fit in a medium, wide or full-width column, and the media width itself can be narrow (min 200px), medium (min 300px), wide (min 500px) or full-width. The grid is responsive, and will re-flow on smaller screens.
@@ -341,6 +344,7 @@
 
 {#if data.region.timeseries && data.region.indicators}
 <Media
+	{theme}
 	col="wide"
 	grid="narrow" gap={20}
 	caption="Source: ONS mid-year population estimates."
@@ -348,6 +352,7 @@
 	{#each [...data.region.indicators].sort((a, b) => b.pop - a.pop) as region}
 	<div class="chart-sml">
 		<LineChart
+            ssr={true}
 			data={data.region.timeseries}
 			xKey="year" yKey="value" zKey="code"
 			color="lightgrey"
@@ -361,9 +366,9 @@
 </Media>
 {/if}
 
-<Divider />
+<Divider {theme}/>
 
-<Section>
+<Section {theme}>
 	<h2>This is a dynamic chart section</h2>
 	<p>
 		The chart below will respond to the captions as you scroll down. The "Scroller" component is
@@ -381,6 +386,7 @@
 				{#if data.district.indicators && metadata.region.lookup}
 					<div class="chart">
 						<ScatterChart
+						    ssr={true}
 							height="calc(100vh - 150px)"
 							data={data.district.indicators.map(d => ({...d, parent_name: metadata.region.lookup[d.parent].name}))}
 							colors={explore ? ['lightgrey'] : colors.cat}
@@ -453,9 +459,9 @@
 	</div>
 </Scroller>
 
-<Divider />
+<Divider {theme}/>
 
-<Section>
+<Section {theme}>
 	<h2>This is a full-width chart demo</h2>
 	<p>
 		Below is an example of a media grid where the column with is set to "full". This allows for full width images and charts.
@@ -466,6 +472,7 @@
 </Section>
 
 <Media
+    {theme}
 	col="full"
 	height={600}
 	caption='This is an optional caption for the above chart or media. It can contain HTML code and <a href="#">hyperlinks</a>, and wrap onto multiple lines.'
@@ -473,6 +480,7 @@
 	<div class="chart-full">
 		{#if data.district.timeseries}
 		<LineChart
+		    ssr={true}
 			data={data.district.timeseries}
 			padding={{left: 50, right: 150, top: 0, bottom: 0}}
 			height="500px"
@@ -489,9 +497,9 @@
 	</div>
 </Media>
 
-<Divider />
+<Divider {theme}/>
 
-<Section>
+<Section {theme}>
 	<h2>This is a dynamic map section</h2>
 	<p class="mb">
 		The map below will respond to the captions as you scroll down. The scroller is not set to splitscreen, so captions are placed over the map on any screen size.
@@ -597,16 +605,16 @@
 </Scroller>
 {/if}
 
-<Divider />
+<Divider {theme}/>
 
-<Section>
+<Section {theme}>
 	<h2>How to use this template</h2>
 	<p>
 		You can find the source code and documentation on how to use this template in <a href="https://github.com/ONSvisual/svelte-scrolly/" target="_blank">this Github repo</a>.
 	</p>
 </Section>
 
-<ONSFooter />
+<!-- <ONSFooter {theme}/> -->
 
 <style>
 	/* Styles specific to elements within the demo */

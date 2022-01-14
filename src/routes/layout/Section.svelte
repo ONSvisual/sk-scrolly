@@ -2,7 +2,7 @@
 	import { themes } from '../config.js';
 	import { getContext } from 'svelte';
 
-	export let theme = getContext('theme');
+	export let theme = 'dark'; // getContext('theme');
 </script>
 
 <section style="color: {themes[theme]['text']}; background-color: {themes[theme]['background']}">

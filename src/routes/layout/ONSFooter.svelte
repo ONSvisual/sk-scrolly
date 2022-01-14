@@ -1,8 +1,9 @@
 <script>
+	import { assets } from "$app/paths";
 	import { themes } from '../config.js';
-	import { getContext } from 'svelte';
+	//import { getContext } from 'svelte';
 
-	export let theme = getContext('theme');
+	export let theme = "dark";
 </script>
 
 <footer style="color: {themes[theme]['text']}; background-color: {themes[theme]['pale']};">
@@ -11,12 +12,12 @@
 			{#if theme == 'dark'}
 			<img
 				class="logo-img"
-				src="./img/ons-logo-neg-en.svg"
+				src="{assets}/img/ons-logo-neg-en.svg"
 				alt="Office for National Statistics" />
 			{:else}
 			<img
 				class="logo-img"
-				src="./img/ons-logo-black-en.svg"
+				src="{assets}/img/ons-logo-black-en.svg"
 				alt="Office for National Statistics" />
 			{/if}
 		</a>

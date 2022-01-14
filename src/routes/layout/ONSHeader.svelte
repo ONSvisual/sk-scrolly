@@ -1,8 +1,9 @@
 <script>
+  import { assets } from "$app/paths";
   import { themes } from '../config.js';
-	import { getContext } from 'svelte';
+	//import { getContext } from 'svelte';
 
-	export let theme = getContext('theme');
+	export let theme = 'dark';//getContext('theme');
 	export let filled = false;
 	export let center = true;
 </script>
@@ -12,11 +13,11 @@
 		<a href="https://www.ons.gov.uk/">
 			<picture>
 				{#if theme == 'dark'}
-				<img src="./img/ons-logo-neg-en.svg" alt="Office for National Statistics">
+				<img src="{assets}/img/ons-logo-neg-en.svg" alt="Office for National Statistics">
 				{:else if filled == true}
-				<img src="./img/ons-logo-pos-en.svg" alt="Office for National Statistics">
+				<img src="{assets}/img/ons-logo-pos-en.svg" alt="Office for National Statistics">
 				{:else}
-				<img src="./img/ons-logo-black-en.svg" alt="Office for National Statistics">
+				<img src="{assets}/img/ons-logo-black-en.svg" alt="Office for National Statistics">
 				{/if}
 			</picture>
 		</a>

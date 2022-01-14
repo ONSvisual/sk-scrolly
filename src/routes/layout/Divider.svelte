@@ -2,7 +2,7 @@
 	import { themes } from '../config.js';
 	import { getContext } from 'svelte';
 
-  export let theme = getContext('theme');
+  export let theme = 'dark'; // getContext('theme');
   export let hr = true;
 </script>
 
