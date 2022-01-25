@@ -61,11 +61,10 @@
 	const threshold = 0.65;
 	// State
 	let animation = getMotion(); // Set animation preference depending on browser preference
-	let id = {}; // Object to hold visible section IDs of Scroller components
-	let idPrev = {}; // Object to keep track of previous IDs, to compare for changes
-	onMount(() => {
-		idPrev = {...id};
-	});
+
+	// Variables to hold visible section IDs of Scroller components
+	let chartSectionId;
+	let mapSectionId;
 
 	// DEMO-SPECIFIC CONFIG
 	// Constants
@@ -194,17 +193,12 @@
 	};
 
 	// Code to run Scroller actions when new caption IDs come into view
-	function runActions(codes = []) {
-		codes.forEach(code => {
-			if (id[code] != idPrev[code]) {
-				if (actions[code][id[code]]) {
-					actions[code][id[code]]();
-				}
-				idPrev[code] = id[code];
-			}
-		});
+	function runActions(sectionId, actions) {
+        if (actions[sectionId])
+            actions[sectionId]();
 	}
-	$: id && runActions(Object.keys(actions)); // Run above code when 'id' object changes
+	$: chartSectionId && runActions(chartSectionId, actions.chart);
+	$: mapSectionId && runActions(mapSectionId, actions.map);
 
 	// INITIALISATION CODE
 	datasetNames.forEach(geo => {
@@ -380,7 +374,7 @@
 	</p>
 </Section>
 
-<Scroller {threshold} bind:id={id['chart']} splitscreen={true}>
+<Scroller {threshold} bind:id={chartSectionId} splitscreen={true}>
 	<div slot="background">
 		<figure>
 			<div class="col-wide height-full">
@@ -508,7 +502,7 @@
 </Section>
 
 {#if geojson && data.district.indicators}
-<Scroller {threshold} bind:id={id['map']}>
+<Scroller {threshold} bind:id={mapSectionId}>
 	<div slot="background">
 		<figure>
 			<div class="col-full height-full">
