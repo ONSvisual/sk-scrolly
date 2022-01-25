@@ -358,6 +358,7 @@
 			color="lightgrey"
 			lineWidth={1} xTicks={2} snapTicks={false}
 			yFormatTick={d => (d / 1e6)} ySuffix="m"
+			ssrWidth={180}
 			height={200} padding={{top: 0, bottom: 20, left: 30, right: 15}}
 			selected={region.code}
 			area={false} title={region.name}/>
