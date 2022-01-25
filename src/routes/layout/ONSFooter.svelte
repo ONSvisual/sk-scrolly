@@ -1,15 +1,15 @@
 <script>
 	import { assets } from "$app/paths";
 	import { themes } from '../config.js';
-	//import { getContext } from 'svelte';
+	import { getContext } from 'svelte';
 
-	export let theme = "dark";
+	export let theme = getContext('theme');
 </script>
 
-<footer style="color: {themes[theme]['text']}; background-color: {themes[theme]['pale']};">
+<footer style="color: {theme['text']}; background-color: {theme['pale']};">
 	<div class="col-wide" data-analytics="footer">
 		<a href="https://www.ons.gov.uk/">
-			{#if theme == 'dark'}
+			{#if theme.name == 'dark'}
 			<img
 				class="logo-img"
 				src="{assets}/img/ons-logo-neg-en.svg"
@@ -22,14 +22,14 @@
 			{/if}
 		</a>
 		<ul>
-			<li><a href="https://www.ons.gov.uk/aboutus/contactus" class="link" style="color: {themes[theme]['text']}">Contact us</a></li>
-			<li><a href="https://www.ons.gov.uk/help/privacynotice" class="link" style="color: {themes[theme]['text']}">Cookies and privacy</a></li>
+			<li><a href="https://www.ons.gov.uk/aboutus/contactus" class="link" style="color: {theme['text']}">Contact us</a></li>
+			<li><a href="https://www.ons.gov.uk/help/privacynotice" class="link" style="color: {theme['text']}">Cookies and privacy</a></li>
 		</ul>
-		<hr style="border-top-color: {themes[theme]['muted']}" />
+		<hr style="border-top-color: {theme['muted']}" />
 		<div class="license">
 			<svg class="ogl-img" viewBox="0 0 59 24" xmlns="http://www.w3.org/2000/svg">
 				<title>UK Open Government Licence</title>
-				<path fill="{themes[theme]['muted']}" d="M59,17.5v6.2H45.3V4l6.2-3.9v17.4H59z M33.6,13h9.8v10.7H43L40.6,21c-2.1,1.8-4.9,3-7.9,3 c-4.4,0-8.3-2.4-10.4-6.1c-2.1,3.6-5.9,6.1-10.4,6.1C5.4,23.9,0,18.6,0,12C0,5.4,5.4,0.1,11.9,0.1c4.5,0,8.4,2.5,10.4,6.1 c2.1-3.6,5.9-6.1,10.4-6.1c4.2,0,7.9,2.2,10.1,5.5l-5.2,3.3c-1-1.6-2.8-2.7-4.8-2.7C29.6,6.2,27,8.8,27,12s2.6,5.8,5.8,5.8 c1.5,0,2.8-0.5,3.8-1.4L33.6,13z M17.7,12c0-3.2-2.6-5.7-5.8-5.7S6.2,8.8,6.2,12s2.6,5.8,5.8,5.8S17.7,15.2,17.7,12z"/>
+				<path fill="{theme['muted']}" d="M59,17.5v6.2H45.3V4l6.2-3.9v17.4H59z M33.6,13h9.8v10.7H43L40.6,21c-2.1,1.8-4.9,3-7.9,3 c-4.4,0-8.3-2.4-10.4-6.1c-2.1,3.6-5.9,6.1-10.4,6.1C5.4,23.9,0,18.6,0,12C0,5.4,5.4,0.1,11.9,0.1c4.5,0,8.4,2.5,10.4,6.1 c2.1-3.6,5.9-6.1,10.4-6.1c4.2,0,7.9,2.2,10.1,5.5l-5.2,3.3c-1-1.6-2.8-2.7-4.8-2.7C29.6,6.2,27,8.8,27,12s2.6,5.8,5.8,5.8 c1.5,0,2.8-0.5,3.8-1.4L33.6,13z M17.7,12c0-3.2-2.6-5.7-5.8-5.7S6.2,8.8,6.2,12s2.6,5.8,5.8,5.8S17.7,15.2,17.7,12z"/>
 			</svg>
 			All content is available under the
 			<a
@@ -37,7 +37,7 @@
 				class="link"
 				target="_blank"
 				rel="noopener"
-				style="color: {themes[theme]['text']}">Open Government Licence v3.0</a>, 
+				style="color: {theme['text']}">Open Government Licence v3.0</a>, 
 			except where otherwise stated
 		</div>
 	</div>

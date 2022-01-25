@@ -1,18 +1,18 @@
 <script>
   import { assets } from "$app/paths";
   import { themes } from '../config.js';
-	//import { getContext } from 'svelte';
+  import { getContext } from 'svelte';
 
-	export let theme = 'dark';//getContext('theme');
+	export let theme = getContext('theme');
 	export let filled = false;
 	export let center = true;
 </script>
 
-<nav style="border-bottom-color: {themes[theme]['muted']}; {filled ? 'background-color: ' +  themes[theme]['background'] + ';' : ''}">
+<nav style="border-bottom-color: {theme['muted']}; {filled ? 'background-color: ' +  theme['background'] + ';' : ''}">
   <div class="col-wide middle" class:center>
 		<a href="https://www.ons.gov.uk/">
 			<picture>
-				{#if theme == 'dark'}
+				{#if theme.name == 'dark'}
 				<img src="{assets}/img/ons-logo-neg-en.svg" alt="Office for National Statistics">
 				{:else if filled == true}
 				<img src="{assets}/img/ons-logo-pos-en.svg" alt="Office for National Statistics">

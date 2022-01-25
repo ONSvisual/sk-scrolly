@@ -24,9 +24,8 @@
 	export let datasetNames, datasets, topojsonData, mapbounds;
 
 	// CORE IMPORTS
-	import { /*setContext,*/ onMount } from "svelte";
+	import { getContext, onMount } from "svelte";
 	import { getMotion } from "./utils.js";
-	import { themes } from "./config.js";
 	import Header from "./layout/Header.svelte";
 	import Section from "./layout/Section.svelte";
 	import Media from "./layout/Media.svelte";
@@ -40,7 +39,7 @@
 	// DEMO-SPECIFIC IMPORTS
 	import bbox from "@turf/bbox";
 	import { setColors, useTopo, getBreaks, getColor } from "./utils.js";
-	import { colors, units } from "./config.js";
+	import { colors, units, themes } from "./config.js";
 	import { ScatterChart, LineChart, BarChart } from "@onsvisual/svelte-charts";
 	import { Map, MapSource, MapLayer, MapTooltip } from "@onsvisual/svelte-maps";
 
@@ -50,10 +49,8 @@
 	//import dataDistrict from "$lib/data/data_district.json";
 
 	// CORE CONFIG (COLOUR THEMES)
-	// Set theme globally (options are 'light', 'dark' or 'lightblue')
-	let theme = "light";
-	//setContext("theme", theme);
-	setColors(themes, theme);
+	let theme = getContext('theme');
+	setColors(themes, theme.name);
 	let ssr = true;
 
 	// CONFIG FOR SCROLLER COMPONENTS
@@ -255,7 +252,7 @@
 	});
 </script>
 
-<Header bgcolor="#206095" bgfixed={true} theme="dark" center={false} short={true}>
+<Header bgcolor="#206095" bgfixed={true} center={false} short={true}>
 	<h1>This is the title of the article</h1>
 	<p class="text-big" style="margin-top: 5px">
 		This is a short text description of the article that might take up a couple of lines
@@ -271,13 +268,13 @@
 	</div>
 </Header>
 
-<Filler theme="lightblue" short={true} wide={true} center={false}>
+<Filler wide={true} center={false}>
 	<p class="text-big">
 		This is a large, left-aligned text caption
 	</p>
 </Filler>
 
-<Section {theme}>
+<Section>
 	<h2>This is a section title</h2>
 	<p>
 		This is a short paragraph of text to demonstrate the standard "medium" column width, font size and line spacing of the template.
@@ -290,9 +287,9 @@
 	</blockquote>
 </Section>
 
-<Divider {theme}/>
+<Divider/>
 
-<Section {theme}>
+<Section>
 	<h2>Embedded charts or media</h2>
 	<p>
 		Below is an embedded chart. It is set to the same width as the column, "medium" (680px), but could also be "narrow" (540px), "wide" (980px) or "full" width. All options are responsive to fit the width of narrow screens.
@@ -301,7 +298,6 @@
 
 {#if data.region.indicators}
 <Media
-    {theme}
 	col="medium"
 	caption="Source: ONS mid-year population estimates."
 >
@@ -318,9 +314,9 @@
 </Media>
 {/if}
 
-<Divider {theme}/>
+<Divider/>
 
-<Section {theme}>
+<Section>
 	<h2>Gridded charts or media</h2>
 	<p>
 		Below is a grid that can contain charts or any other kind of visual media. The grid can fit in a medium, wide or full-width column, and the media width itself can be narrow (min 200px), medium (min 300px), wide (min 500px) or full-width. The grid is responsive, and will re-flow on smaller screens.
@@ -329,7 +325,6 @@
 
 {#if data.region.timeseries && data.region.indicators}
 <Media
-	{theme}
 	col="wide"
 	grid="narrow" gap={20}
 	caption="Source: ONS mid-year population estimates."
@@ -352,9 +347,9 @@
 </Media>
 {/if}
 
-<Divider {theme}/>
+<Divider/>
 
-<Section {theme}>
+<Section>
 	<h2>This is a dynamic chart section</h2>
 	<p>
 		The chart below will respond to the captions as you scroll down. The "Scroller" component is
@@ -445,9 +440,9 @@
 	</div>
 </Scroller>
 
-<Divider {theme}/>
+<Divider/>
 
-<Section {theme}>
+<Section>
 	<h2>This is a full-width chart demo</h2>
 	<p>
 		Below is an example of a media grid where the column with is set to "full". This allows for full width images and charts.
@@ -458,7 +453,6 @@
 </Section>
 
 <Media
-    {theme}
 	col="full"
 	height={600}
 	caption='This is an optional caption for the above chart or media. It can contain HTML code and <a href="#">hyperlinks</a>, and wrap onto multiple lines.'
@@ -483,9 +477,9 @@
 	</div>
 </Media>
 
-<Divider {theme}/>
+<Divider/>
 
-<Section {theme}>
+<Section>
 	<h2>This is a dynamic map section</h2>
 	<p class="mb">
 		The map below will respond to the captions as you scroll down. The scroller is not set to splitscreen, so captions are placed over the map on any screen size.
@@ -591,9 +585,9 @@
 </Scroller>
 {/if}
 
-<Divider {theme}/>
+<Divider/>
 
-<Section {theme}>
+<Section>
 	<h2>How to use this template</h2>
 	<p>
 		You can find the source code and documentation on how to use this template in <a href="https://github.com/ONSvisual/svelte-scrolly/" target="_blank">this Github repo</a>.

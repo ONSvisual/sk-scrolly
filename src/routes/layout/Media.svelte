@@ -12,7 +12,7 @@
 		wide: 500,
 	};
 
-	export let theme = 'dark'; // getContext("theme");
+	export let theme = getContext("theme");
 	export let col = "medium";
 	export let grid = null;
 	export let caption = null;
@@ -88,7 +88,7 @@
 </script>
 
 {#if nogrid}
-<figure style="color: {themes[theme]['text']}; background-color: {themes[theme]['background']};">
+<figure style="color: {theme['text']}; background-color: {theme['background']};">
 	<div class="col-{col}">
 		<div bind:this={el} bind:clientWidth={gridWidth} class="grid-ms">
 			<slot></slot>
@@ -96,7 +96,7 @@
 	</div>
 </figure>
 {:else}
-<figure style="color: {themes[theme]['text']}; background-color: {themes[theme]['background']};">
+<figure style="color: {theme['text']}; background-color: {theme['background']};">
 	<div class="col-{col}">
 		<div class="grid{gridClass}" style="grid-gap: {gridGap}; min-height: {rowHeight}">
 			<slot></slot>
@@ -105,7 +105,7 @@
 </figure>
 {/if}
 {#if caption}
-	<caption style="color: {themes[theme]['text']}; background-color: {themes[theme]['background']};">
+	<caption style="color: {theme['text']}; background-color: {theme['background']};">
 		<div class="col-medium">
 			<div class="caption">{@html caption}</div>
 		</div>
