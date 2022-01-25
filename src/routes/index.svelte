@@ -2,31 +2,31 @@
     export const prerender = true;
 
 	import { getData } from "./utils.js";
+	import { geoBounds } from 'd3-geo';
+    import { feature } from 'topojson-client';
 
 	export async function load({ url, params, fetch, session, stuff }) {
         const datasetNames = ["region", "district"];
         let datasets = {};
         for (let geo of datasetNames) {
-            //let arr = await (await fetch(`./data/data_${geo}.json`)).json();
-            let arr = await getData(`./data/data_${geo}.csv`, fetch)
-            datasets[geo] = arr;
+            datasets[geo] = await getData(`./data/data_${geo}.csv`, fetch);
         }
         let topojsonData = await (await fetch(`./data/geo_lad2021.json`)).json()
+        let mapbounds = {uk: geoBounds(feature(topojsonData, 'geog'))};
+        /* const mapbounds = { uk: [ [-9, 49 ], [ 2, 61 ] ] }; */
         return {
-            props: {datasets, datasetNames, topojsonData}
+            props: {datasets, datasetNames, topojsonData, mapbounds}
         };
     }
 </script>
 
 <script>
-	export let datasetNames, datasets, topojsonData;
+	export let datasetNames, datasets, topojsonData, mapbounds;
 
 	// CORE IMPORTS
 	import { /*setContext,*/ onMount } from "svelte";
 	import { getMotion } from "./utils.js";
 	import { themes } from "./config.js";
-	//import ONSHeader from "./layout/ONSHeader.svelte";
-	// import ONSFooter from "./layout/ONSFooter.svelte";
 	import Header from "./layout/Header.svelte";
 	import Section from "./layout/Section.svelte";
 	import Media from "./layout/Media.svelte";
@@ -68,14 +68,7 @@
 
 	// DEMO-SPECIFIC CONFIG
 	// Constants
-	const topojson = "/data/geo_lad2021.json";
 	const mapstyle = "https://bothness.github.io/ons-basemaps/data/style-omt.json";
-	const mapbounds = {
-		uk: [
-			[-9, 49 ],
-			[ 2, 61 ]
-		]
-	};
 
 	// Data
 	let data = {district: {}, region: {}};
@@ -261,8 +254,6 @@
 		geojson = geo;
 	});
 </script>
-
-<!-- <ONSHeader filled={true} center={false} /> -->
 
 <Header bgcolor="#206095" bgfixed={true} theme="dark" center={false} short={true}>
 	<h1>This is the title of the article</h1>
@@ -608,8 +599,6 @@
 		You can find the source code and documentation on how to use this template in <a href="https://github.com/ONSvisual/svelte-scrolly/" target="_blank">this Github repo</a>.
 	</p>
 </Section>
-
-<!-- <ONSFooter {theme}/> -->
 
 <style>
 	/* Styles specific to elements within the demo */
