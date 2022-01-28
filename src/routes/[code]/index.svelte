@@ -256,7 +256,7 @@
 </script>
 
 <Header bgcolor="#206095" bgfixed={true} center={false} short={true}>
-	<h1>This is the title of the article: {placeCode}</h1>
+	<h1>Article for place {placeCode}</h1>
 	<p class="text-big" style="margin-top: 5px">
 		This is a short text description of the article that might take up a couple of lines
 	</p>
@@ -278,6 +278,7 @@
 </Filler>
 
 <Section>
+    <p><a href=".."><strong>Go to start page</strong></a></p>
     <p>Select another country or region</p>
     <ul>
       <li><a href="{base}/K04000001"><strong>England and Wales</strong></a></li>
