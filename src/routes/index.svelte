@@ -21,6 +21,8 @@
 </script>
 
 <script>
+	import { base, assets } from "$app/paths";
+
 	export let datasetNames, datasets, topojsonData, mapbounds;
 
 	// CORE IMPORTS
@@ -273,6 +275,28 @@
 		This is a large, left-aligned text caption
 	</p>
 </Filler>
+
+<Section>
+    <p>Select a country or region</p>
+    <ul>
+      <li><a href="{base}/K04000001"><strong>England and Wales</strong></a></li>
+      <ul>
+        <li><a href="{base}/E92000001">England</a></li>
+        <ul>
+          <li><a href="{base}/E12000001">North East</a></li>
+          <li><a href="{base}/E12000002">North West</a></li>
+          <li><a href="{base}/E12000003">Yorkshire and The Humber</a></li>
+          <li><a href="{base}/E12000004">East Midlands</a></li>
+          <li><a href="{base}/E12000005">West Midlands</a></li>
+          <li><a href="{base}/E12000006">East of England</a></li>
+          <li><a href="{base}/E12000007">London</a></li>
+          <li><a href="{base}/E12000008">South East</a></li>
+          <li><a href="{base}/E12000009">South West</a></li>
+        </ul>
+        <li><a href="{base}/W92000004">Wales</a></li>
+      </ul>
+    </ul>
+</Section>
 
 <Section>
 	<h2>This is a section title</h2>
