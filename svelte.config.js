@@ -6,7 +6,7 @@ const production = process.env.NODE_ENV === 'production';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: static_adapter(),
+		adapter: adapter(),
 		//adapter: adapter(),
 
 		files: {
@@ -15,7 +15,7 @@ const config = {
 		},
 
 		// hydrate the <div id="svelte"> element in src/app.html
-		target: '#svelte',
+		//target: '#svelte',
         paths: {
             assets: production ? '' : '',
             base: production ? '' : ''
