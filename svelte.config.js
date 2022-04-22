@@ -1,27 +1,25 @@
-import adapter from '@sveltejs/adapter-auto';
-import static_adapter from '@sveltejs/adapter-static';
+/** @type {import('@sveltejs/kit').Config} */
+import adapter from '@sveltejs/adapter-static';
 
 const production = process.env.NODE_ENV === 'production';
 
-/** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter(),
-		//adapter: adapter(),
-
-		files: {
-			assets: 'static',
-		    lib: 'src/lib'
-		},
-
 		// hydrate the <div id="svelte"> element in src/app.html
-		//target: '#svelte',
-        paths: {
-            assets: production ? '' : '',
-            base: production ? '' : ''
-        },
-	    vite: {
-        }
+		adapter: adapter({
+			// Options below are defaults
+			pages: 'build',
+			assets: 'build'
+		}),
+		prerender: {
+			default: true,
+			enabled: production,
+			onError: 'continue'
+		},
+		paths: {
+			base: production ? '/sk-scrolly' : ''
+		},
+		trailingSlash: 'always'
 	}
 };
 

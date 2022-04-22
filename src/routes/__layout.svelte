@@ -1,25 +1,29 @@
 <script>
-  import { assets } from "$app/paths";
+  import { base } from "$app/paths";
 	import { setContext } from "svelte";
   import "../app.css";
-	import { themes } from "./config";
 	//import Warning from "$lib/ui/Warning.svelte";
-	import ONSHeader from "./layout/ONSHeader.svelte";
-	import ONSFooter from "./layout/ONSFooter.svelte";
+	import ONSHeader from "$lib/layout/ONSHeader.svelte";
+	import ONSFooter from "$lib/layout/ONSFooter.svelte";
 
   // STYLE CONFIG
   // Set theme globally (options are 'light' or 'dark')
   let theme = "light";
-  setContext("theme", themes[theme]);
+  setContext("theme", theme);
 </script>
 
 <svelte:head>
-  <!-- <link rel="icon" href="{assets}/favicon.png" /> -->
+  <link rel="icon" href="{base}/favicon.ico" />
+	<meta property="og:type" content="website" />
+	<meta property="og:image" content="{base}/img/og.png" />
+	<meta property="og:image:type" content="image/png" />
 </svelte:head>
 
 <!-- <Warning/> -->
-<ONSHeader/>
+<ONSHeader {theme}/>
 
-<slot/>
+<main>
+  <slot {theme}/>
+</main>
 
-<ONSFooter/>
+<ONSFooter {theme}/>

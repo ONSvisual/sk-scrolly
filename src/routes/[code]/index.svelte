@@ -1,59 +1,65 @@
 <script context="module">
-    export const prerender = true;
+	export const prerender = true;
+	
+	import bbox from "@turf/bbox";
+  import { base } from "$app/paths";
+	import { getData, getTopo, makeDatasets } from "$lib/utils";
+	import { colors } from "$lib/config";
 
-	import { getData } from "../utils.js";
-	import { geoBounds } from 'd3-geo';
-    import { feature } from 'topojson-client';
+	export async function load({ params, fetch }) {
+		let data = {};
+		let meta = {};
 
-	export async function load({ url, params, fetch, session, stuff }) {
-        let code = params.code;
-        const datasetNames = ["region", "district"];
-        let datasets = {};
-        for (let geo of datasetNames) {
-            datasets[geo] = await getData(`../data/data_${geo}.csv`, fetch);
-        }
-        let topojsonData = await (await fetch(`../data/geo_lad2021.json`)).json()
-        let mapbounds = {uk: geoBounds(feature(topojsonData, 'geog'))};
-        /* const mapbounds = { uk: [ [-9, 49 ], [ 2, 61 ] ] }; */
-        return {
-            props: {datasets, datasetNames, topojsonData, mapbounds, placeCode: code}
-        };
-    }
+		const keys = ["region", "district"];
+
+		for (const key of keys) {
+			let data_raw = await getData(`${base}/data/data_${key}.csv`, fetch);
+			let {dataset, metadata} = makeDatasets(data_raw, colors, key);
+			data[key] = dataset;
+			meta[key] = metadata;
+		}
+		let geojson = await getTopo(`${base}/data/geo_lad2021.json`, 'geog', fetch);
+		let mapbounds = bbox(geojson);
+
+		let selected = params.code; // GSS code for selected district
+		let place = meta.district.lookup[selected]; // Metadata for selected district
+		let parent = place.parent; // Gets region code for 'selected'
+		let siblings = meta.district.array.filter(d => d.parent == parent).map(d => d.code); // Array of district GSS codes in 'region'
+		
+		return {
+				props: {data, meta, geojson, mapbounds, selected, place, parent, siblings}
+		};
+	}
 </script>
 
 <script>
-	import { base, assets } from "$app/paths";
-
-	export let datasetNames, datasets, topojsonData, mapbounds, placeCode;
+	export let data, meta, geojson, mapbounds, selected, place, parent, siblings;
 
 	// CORE IMPORTS
 	import { getContext, onMount } from "svelte";
-	import { getMotion } from "../utils.js";
-	import Header from "../layout/Header.svelte";
-	import Section from "../layout/Section.svelte";
-	import Media from "../layout/Media.svelte";
-	import Scroller from "../layout/Scroller.svelte";
-	import Filler from "../layout/Filler.svelte";
-	import Divider from "../layout/Divider.svelte";
-	import Toggle from "../ui/Toggle.svelte";
-	import Arrow from "../ui/Arrow.svelte";
-	import Em from "../ui/Em.svelte";
+	import { getMotion } from "$lib/utils";
+	import Header from "$lib/layout/Header.svelte";
+	import Section from "$lib/layout/Section.svelte";
+	import Media from "$lib/layout/Media.svelte";
+	import Scroller from "$lib/layout/Scroller.svelte";
+	import Filler from "$lib/layout/Filler.svelte";
+	import Divider from "$lib/layout/Divider.svelte";
+	import Toggle from "$lib/ui/Toggle.svelte";
+	import Arrow from "$lib/ui/Arrow.svelte";
+	import Em from "$lib/ui/Em.svelte";
+	import Icon from "$lib/ui/Icon.svelte";
+	import Select from "$lib/ui/Select.svelte";
 
 	// DEMO-SPECIFIC IMPORTS
-	import bbox from "@turf/bbox";
-	import { setColors, useTopo, getBreaks, getColor } from "../utils.js";
-	import { colors, units, themes } from "../config.js";
+	import { goto } from "$app/navigation";
+	import { setColors, getBreaks } from "$lib/utils";
+	import { units, themes } from "$lib/config";
 	import { ScatterChart, LineChart, BarChart } from "@onsvisual/svelte-charts";
 	import { Map, MapSource, MapLayer, MapTooltip } from "@onsvisual/svelte-maps";
 
-	// DEMO-SPECIFIC DATA IMPORTS
-	//import topojsonData from "$lib/data/geo_lad2021.json";
-	//import dataRegion from "$lib/data/data_region.json";
-	//import dataDistrict from "$lib/data/data_district.json";
-
 	// CORE CONFIG (COLOUR THEMES)
 	let theme = getContext('theme');
-	setColors(themes, theme.name);
+	onMount(() => setColors(themes, theme.name));
 	let ssr = true;
 
 	// CONFIG FOR SCROLLER COMPONENTS
@@ -61,28 +67,18 @@
 	const threshold = 0.65;
 	// State
 	let animation = getMotion(); // Set animation preference depending on browser preference
-
-	// Variables to hold visible section IDs of Scroller components
-	let chartSectionId;
-	let mapSectionId;
+	let id = {}; // Object to hold visible section IDs of Scroller components
+	let idPrev = {}; // Object to keep track of previous IDs, to compare for changes
 
 	// DEMO-SPECIFIC CONFIG
 	// Constants
 	const mapstyle = "https://bothness.github.io/ons-basemaps/data/style-omt.json";
-
-	// Data
-	let data = {district: {}, region: {}};
-	let metadata = {district: {}, region: {}};
-	let geojson;
 
 	// Element bindings
 	let map = null; // Bound to mapbox 'map' instance once initialised
 
 	// State
 	let hovered; // Hovered district (chart or map)
-	let selected; // Selected district (chart or map)
-	$: region = selected && metadata.district.lookup ? metadata.district.lookup[selected].parent : null; // Gets region code for 'selected'
-	$: chartHighlighted = metadata.district.array && region ? metadata.district.array.filter(d => d.parent == region).map(d => d.code) : []; // Array of district codes in 'region'
 	let mapHighlighted = []; // Highlighted district (map only)
 	let xKey = "area"; // xKey for scatter chart
 	let yKey = null; // yKey for scatter chart
@@ -90,14 +86,15 @@
 	let rKey = null; // rKey (radius) for scatter chart
 	let mapKey = "density"; // Key for data to be displayed on map
 	let explore = false; // Allows chart/map interactivity to be toggled on/off
+	let showList = false; // Show/hide list of local authorities at end of article
 
 	// FUNCTIONS (INCL. SCROLLER ACTIONS)
 
 	// Functions for chart and map on:select and on:hover events
 	function doSelect(e) {
-		//console.log(e);
-		selected = e.detail.id;
+		let selected_new = e.detail.code ? e.detail.code : e.detail.id;
 		if (e.detail.feature) fitById(selected); // Fit map if select event comes from map
+		goto(`${base}/${selected_new}`, {noscroll: true, keepfocus: true});
 	}
 	function doHover(e) {
 		hovered = e.detail.id;
@@ -121,26 +118,26 @@
 	const actions = {
 		map: { // Actions for <Scroller/> with id="map"
 			map01: () => { // Action for <section/> with data-id="map01"
-				fitBounds(mapbounds.uk);
+				fitBounds(mapbounds);
 				mapKey = "density";
 				mapHighlighted = [];
 				explore = false;
 			},
 			map02: () => {
-				fitBounds(mapbounds.uk);
+				fitBounds(mapbounds);
 				mapKey = "age_med";
 				mapHighlighted = [];
 				explore = false;
 			},
 			map03: () => {
-				let hl = [...data.district.indicators].sort((a, b) => b.age_med - a.age_med)[0];
+				let hl = data.district.indicators.find(d => d.code == selected);
 				fitById(hl.code);
 				mapKey = "age_med";
 				mapHighlighted = [hl.code];
 				explore = false;
 			},
 			map04: () => {
-				fitBounds(mapbounds.uk);
+				fitBounds(mapbounds);
 				mapKey = "age_med";
 				mapHighlighted = [];
 				explore = true;
@@ -186,77 +183,26 @@
 	};
 
 	// Code to run Scroller actions when new caption IDs come into view
-	function runActions(sectionId, actions) {
-        if (actions[sectionId])
-            actions[sectionId]();
+	function runActions(key) {
+		if (id[key] != idPrev[key] && actions[key][id[key]]) {
+			actions[key][id[key]]();
+			idPrev[key] = id[key];
+		}
 	}
-	$: chartSectionId && runActions(chartSectionId, actions.chart);
-	$: mapSectionId && runActions(mapSectionId, actions.map);
-
-	// INITIALISATION CODE
-	datasetNames.forEach(geo => {
-        const arr = datasets[geo];
-        //console.log({geo, arr});
-        let meta = arr.map(d => ({
-            code: d.code,
-            name: d.name,
-            parent: d.parent ? d.parent : null
-        }));
-        let lookup = {};
-        meta.forEach(d => {
-            lookup[d.code] = d;
-        });
-        metadata[geo].array = meta;
-        metadata[geo].lookup = lookup;
-
-        let indicators = arr.map((d, i) => ({
-            ...meta[i],
-            area: d.area,
-            pop: d['2020'],
-            density: d.density,
-            age_med: d.age_med
-        }));
-
-        if (geo == "district") {
-            ['density', 'age_med'].forEach(key => {
-                let values = indicators.map(d => d[key]).sort((a, b) => a - b);
-                let breaks = getBreaks(values);
-                indicators.forEach((d, i) => indicators[i][key + '_color'] = getColor(d[key], breaks, colors.seq));
-            });
-        }
-        data[geo].indicators = indicators;
-
-        let years = [
-            2001, 2002, 2003, 2004, 2005,
-            2006, 2007, 2008, 2009, 2010,
-            2011, 2012, 2013, 2014, 2015,
-            2016, 2017, 2018, 2019, 2020
-        ];
-
-        let timeseries = [];
-        arr.forEach(d => {
-            years.forEach(year => {
-                timeseries.push({
-                    code: d.code,
-                    name: d.name,
-                    value: d[year],
-                    year
-                });
-            });
-        });
-        data[geo].timeseries = timeseries;
-        //console.log(timeseries);
-	});
-
-	useTopo(topojsonData, 'geog')
-	.then(geo => {
-		geo.features.sort((a, b) => a.properties.AREANM.localeCompare(b.properties.AREANM));
-		geojson = geo;
-	});
+	$: id["chart"] && runActions("chart");
+	$: id["map"] && runActions("map");
 </script>
 
-<Header bgcolor="#206095" bgfixed={true} center={false} short={true}>
-	<h1>Article for place {placeCode}</h1>
+<svelte:head>
+  <title>Localised article for {place.name}</title>
+	<meta property="og:url" content="{base}/{selected}" />
+  <meta property="og:title" content="Localised article for {place.name}" />
+	<meta property="og:description" content="This is a description of the page." />
+	<meta name="description" content="This is a description of the page." />
+</svelte:head>
+
+<Header theme="dark" bgcolor="#206095" bgfixed={true} center={false} short={true}>
+	<h1>Localised article for {place.name}</h1>
 	<p class="text-big" style="margin-top: 5px">
 		This is a short text description of the article that might take up a couple of lines
 	</p>
@@ -264,41 +210,22 @@
 		DD MMM YYYY
 	</p>
 	<p>
-		<Toggle label="Animation {animation ? 'on' : 'off'}" mono={true} bind:checked={animation}/>
+		<Toggle mono={true} bind:checked={animation}>Animation {animation ? 'on' : 'off'}</Toggle>
 	</p>
 	<div style="margin-top: 90px;">
 		<Arrow color="white" {animation}>Scroll to begin</Arrow>
 	</div>
 </Header>
 
-<Filler wide={true} center={false}>
+<Filler theme="lightblue" wide={true} center={false}>
 	<p class="text-big">
-		This is a large, left-aligned text caption
+		This is a large caption. This template has some captions and selections that are specific to <strong>{place.name}</strong>.
 	</p>
+	<p class="text-big">
+		<label for="intro-select">Change the selected place using the selection box below.</label>
+	</p>
+	<Select id="intro-select" idKey="code" labelKey="name" items={meta.district.array} value={place} on:select={doSelect} isClearable={false}/>
 </Filler>
-
-<Section>
-    <p><a href=".."><strong>Go to start page</strong></a></p>
-    <p>Select another country or region</p>
-    <ul>
-      <li><a href="{base}/K04000001"><strong>England and Wales</strong></a></li>
-      <ul>
-        <li><a href="{base}/E92000001">England</a></li>
-        <ul>
-          <li><a href="{base}/E12000001">North East</a></li>
-          <li><a href="{base}/E12000002">North West</a></li>
-          <li><a href="{base}/E12000003">Yorkshire and The Humber</a></li>
-          <li><a href="{base}/E12000004">East Midlands</a></li>
-          <li><a href="{base}/E12000005">West Midlands</a></li>
-          <li><a href="{base}/E12000006">East of England</a></li>
-          <li><a href="{base}/E12000007">London</a></li>
-          <li><a href="{base}/E12000008">South East</a></li>
-          <li><a href="{base}/E12000009">South West</a></li>
-        </ul>
-        <li><a href="{base}/W92000004">Wales</a></li>
-      </ul>
-    </ul>
-</Section>
 
 <Section>
 	<h2>This is a section title</h2>
@@ -320,25 +247,28 @@
 	<p>
 		Below is an embedded chart. It is set to the same width as the column, "medium" (680px), but could also be "narrow" (540px), "wide" (980px) or "full" width. All options are responsive to fit the width of narrow screens.
 	</p>
+	<p>
+		The chart highlights <Em color="#206095">{meta.region.lookup[parent].name}</Em>, the parent region/nation of <strong>{place.name}</strong>.
+	</p>
 </Section>
 
-{#if data.region.indicators}
 <Media
 	col="medium"
 	caption="Source: ONS mid-year population estimates."
 >
 	<div class="chart-sml">
 		<BarChart
-		    ssr={true}
+		  ssr={true}
 			data={[...data.region.indicators].sort((a, b) => a.pop - b.pop)}
-			xKey="pop" yKey="name"
+			xKey="pop" yKey="name" idKey="code"
+			color="lightgrey"
 			snapTicks={false}
 			xFormatTick={d => (d / 1e6)} xSuffix="m"
 			height={350} padding={{top: 0, bottom: 15, left: 140, right: 0}}
+			highlighted={[parent]} overlayFill colorHighlight="#206095"
 			area={false} title="Population by region/nation, 2020"/>
 	</div>
 </Media>
-{/if}
 
 <Divider/>
 
@@ -349,7 +279,6 @@
 	</p>
 </Section>
 
-{#if data.region.timeseries && data.region.indicators}
 <Media
 	col="wide"
 	grid="narrow" gap={20}
@@ -358,7 +287,7 @@
 	{#each [...data.region.indicators].sort((a, b) => b.pop - a.pop) as region}
 	<div class="chart-sml">
 		<LineChart
-            ssr={true}
+      ssr={true}
 			data={data.region.timeseries}
 			xKey="year" yKey="value" zKey="code"
 			color="lightgrey"
@@ -366,12 +295,11 @@
 			yFormatTick={d => (d / 1e6)} ySuffix="m"
 			ssrWidth={180}
 			height={200} padding={{top: 0, bottom: 20, left: 30, right: 15}}
-			selected={region.code}
+			highlighted={[region.code]}
 			area={false} title={region.name}/>
 	</div>
 	{/each}
 </Media>
-{/if}
 
 <Divider/>
 
@@ -386,16 +314,15 @@
 	</p>
 </Section>
 
-<Scroller {threshold} bind:id={chartSectionId} splitscreen={true}>
+<Scroller {threshold} bind:id={id['chart']} splitscreen={true}>
 	<div slot="background">
 		<figure>
 			<div class="col-wide height-full">
-				{#if data.district.indicators && metadata.region.lookup}
 					<div class="chart">
 						<ScatterChart
 						    ssr={true}
 							height="calc(100vh - 150px)"
-							data={data.district.indicators.map(d => ({...d, parent_name: metadata.region.lookup[d.parent].name}))}
+							data={data.district.indicators.map(d => ({...d, parent_name: meta.region.lookup[d.parent].name}))}
 							colors={explore ? ['lightgrey'] : colors.cat}
 							{xKey} {yKey} {zKey} {rKey} idKey="code" labelKey="name"
 							r={[3,10]}
@@ -406,11 +333,10 @@
 							legend={zKey != null} labels
 							select={explore} selected={explore ? selected : null} on:select={doSelect}
 							hover {hovered} on:hover={doHover}
-							highlighted={explore ? chartHighlighted : []}
+							highlighted={explore ? siblings : []}
 							colorSelect="#206095" colorHighlight="#999" overlayFill
 							{animation}/>
 					</div>
-				{/if}
 			</div>
 		</figure>
 	</div>
@@ -447,20 +373,10 @@
 		<section data-id="chart05">
 			<div class="col-medium">
 				<h3>Select a district</h3>
-				<p>Use the selection box below or click on the chart to select a district. The chart will also highlight the other districts in the same part of the country.</p>
-				{#if geojson}
+				<p><label for="chart-select">Use the selection box below or click on the chart to select a district. The chart will also highlight the other districts in the same part of the country.</label></p>
 					<p>
-						<!-- svelte-ignore a11y-no-onchange -->
-						<select bind:value={selected}>
-							<option value={null}>Select one</option>
-							{#each geojson.features as place}
-								<option value={place.properties.AREACD}>
-									{place.properties.AREANM}
-								</option>
-							{/each}
-						</select>
+						<Select id="chart-select" idKey="code" labelKey="name" items={meta.district.array} value={place} on:select={doSelect} isClearable={false}/>
 					</p>
-				{/if}
 			</div>
 		</section>
 	</div>
@@ -484,7 +400,6 @@
 	caption='This is an optional caption for the above chart or media. It can contain HTML code and <a href="#">hyperlinks</a>, and wrap onto multiple lines.'
 >
 	<div class="chart-full">
-		{#if data.district.timeseries}
 		<LineChart
 		    ssr={true}
 			data={data.district.timeseries}
@@ -495,11 +410,10 @@
 			yFormatTick={d => (d/1e6).toFixed(1)} ySuffix="m"
 			select {selected} on:select={doSelect}
 			hover {hovered} on:hover={doHover}
-			highlighted={chartHighlighted}
+			highlighted={siblings}
 			colorSelect="#206095" colorHighlight="#999"
 			area={false} title="Mid-year population by district, 2001 to 2020"
 			labels labelKey="name"/>
-		{/if}
 	</div>
 </Media>
 
@@ -512,12 +426,11 @@
 	</p>
 </Section>
 
-{#if geojson && data.district.indicators}
-<Scroller {threshold} bind:id={mapSectionId}>
+<Scroller {threshold} bind:id={id['map']}>
 	<div slot="background">
 		<figure>
 			<div class="col-full height-full">
-				<Map style={mapstyle} bind:map interactive={false} location={{bounds: mapbounds.uk}}>
+				<Map style={mapstyle} bind:map interactive={false} location={{bounds: mapbounds}}>
 					<MapSource
 					  id="lad"
 					  type="geojson"
@@ -541,7 +454,7 @@
 					  		'fill-opacity': 0.7
 					  	}}>
 								<MapTooltip content={
-									hovered ? `${metadata.district.lookup[hovered].name}<br/><strong>${data.district.indicators.find(d => d.code == hovered)[mapKey].toLocaleString()} ${units[mapKey]}</strong>` : ''
+									hovered ? `${meta.district.lookup[hovered].name}<br/><strong>${data.district.indicators.find(d => d.code == hovered)[mapKey].toLocaleString()} ${units[mapKey]}</strong>` : ''
 								}/>
 							</MapLayer>
 						<MapLayer
@@ -580,36 +493,42 @@
 		</section>
 		<section data-id="map03">
 			<div class="col-medium">
-				<!-- This gets the data object for the district with the oldest median age -->
-				{#each [[...data.district.indicators].sort((a, b) => b.age_med - a.age_med)[0]] as district}
 				<p>
-					The map is now zoomed on <Em color={district.age_med_color}>{district.name}</Em>, the district with the oldest median age, {district.age_med} years.
+					The map is now zoomed on <Em color={data.district.indicators.find(d => d.code == selected).age_med_color}>{place.name}</Em>, which has a median age of {data.district.indicators.find(d => d.code == selected).age_med} years.
 				</p>
-				{/each}
 			</div>
 		</section>
 		<section data-id="map04">
 			<div class="col-medium">
 				<h3>Select a district</h3>
-				<p>Use the selection box below or click on the map to select and zoom to a district.</p>
-				{#if geojson}
+				<p><label for="map-select">Use the selection box below or click on the map to select and zoom to a district.</label></p>
 					<p>
-						<!-- svelte-ignore a11y-no-onchange -->
-						<select bind:value={selected} on:change={() => fitById(selected)}>
-							<option value={null}>Select one</option>
-							{#each geojson.features as place}
-								<option value={place.properties.AREACD}>
-									{place.properties.AREANM}
-								</option>
-							{/each}
-						</select>
+						<Select id="map-select" idKey="code" labelKey="name" items={meta.district.array} value={place} on:select={doSelect} isClearable={false}/>
 					</p>
-				{/if}
 			</div>
 		</section>
 	</div>
 </Scroller>
-{/if}
+
+<Divider/>
+
+<Section>
+	<h2>Other versions of this article</h2>
+	<p><Icon type="arrow" rotation={showList ? 90 : 0}/> <button class="btn-text" on:click={() => showList = !showList}>{showList ? 'Hide' : 'Show'} list of local authorities</button></p>
+</Section>
+
+<div class:visually-hidden="{!showList}">
+<Media col="wide" grid="narrow">
+	{#each [...meta.region.array].sort((a, b) => a.code.localeCompare(b.code)) as region}
+	<div class="text-small">
+		<strong>{region.name}</strong><br/>
+		{#each meta.district.array.filter(d => d.parent == region.code) as place}
+		<a href="{base}/{place.code}">{place.name}</a><br/>
+		{/each}
+	</div>
+	{/each}
+</Media>
+</div>
 
 <Divider/>
 
@@ -628,8 +547,8 @@
 	:global(svelte-scroller-foreground section div) {
 		pointer-events: all !important;
 	}
-	select {
-		max-width: 350px;
+	button {
+		cursor: pointer;
 	}
 	.chart {
 		margin-top: 45px;
@@ -641,20 +560,15 @@
 	.chart-sml {
 		font-size: 0.85em;
 	}
-	/* The properties below make the media DIVs grey, for visual purposes in demo */
-	/*.media {
-		background-color: #f0f0f0;
-		display: -webkit-box;
-		display: -ms-flexbox;
-		display: flex;
-		-webkit-box-orient: vertical;
-		-webkit-box-direction: normal;
-		-ms-flex-flow: column;
-		flex-flow: column;
-		-webkit-box-pack: center;
-		-ms-flex-pack: center;
-		justify-content: center;
-		text-align: center;
-		color: #aaa;
-	}*/
+	.btn-text {
+		border: none;
+		background: none;
+		margin: 0;
+		padding: 0;
+		text-decoration: underline;
+		color: #206095;
+	}
+	.btn-text:hover {
+		color: black;
+	}
 </style>

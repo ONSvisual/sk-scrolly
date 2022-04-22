@@ -1,13 +1,12 @@
 <script>
   export let id = "switch";
-  export let label = "Label";
   export let mono = false;
   export let checked;
 </script>
 
 <div class="switch">
-  <input bind:checked {id} type="checkbox" class="switch-input" tabindex="0" />
-  <label for={id} class="switch-label" class:mono>{label}</label>
+  <input bind:checked={checked} {id} type="checkbox" class="switch-input" tabindex="0" />
+  <label for={id} class="switch-label" class:mono><slot></slot></label>
 </div>
 
 <style>
@@ -72,6 +71,9 @@
   .switch-input:checked + .switch-label::after {
     left: 27px;
     top: 3px;
+  }
+	.switch-input:focus + .switch-label::before {
+    outline: 3px solid orange;
   }
 
   .mono::before {

@@ -1,5 +1,5 @@
 <script>
-  import { themes } from '../config.js';
+  import { themes } from '$lib/config';
 	import { getContext } from 'svelte';
 
 	export let theme = getContext('theme');
@@ -32,7 +32,7 @@
   }
 </style>
 
-<header style="color: {theme['text']}; background-color: {bgcolor ? bgcolor : theme['background']}; {style}" class:short>
+<header style="color: {themes[theme]['text']}; background-color: {bgcolor ? bgcolor : themes[theme]['background']}; {style}" class:short>
 	<div class="v-padded col-wide middle" style="position: relative" class:short class:height-full={!short}>
 		<div class:center>
 			<slot></slot>

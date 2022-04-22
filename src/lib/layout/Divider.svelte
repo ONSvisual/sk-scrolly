@@ -1,17 +1,17 @@
 <script>
-	import { themes } from '../config.js';
+	import { themes } from '$lib/config';
 	import { getContext } from 'svelte';
 
   export let theme = getContext('theme');
   export let hr = true;
 </script>
 
-<section style="color: {theme['text']}; background-color: {theme['background']};">
+<section style="color: {themes[theme]['text']}; background-color: {themes[theme]['background']};">
 	<div class="col-medium">
     {#if hr}
-    <hr style="color: {theme['muted']}"/>
+    <hr style="color: {themes[theme]['muted']}"/>
     {:else}
-    <hr style="color: {theme['muted']}; border: none;"/>
+    <hr style="color: {themes[theme]['muted']}; border: none;"/>
     {/if}
 	</div>
 </section>
