@@ -3,7 +3,8 @@
   export let secondary = "#a8bd3a";
 </script>
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 651 60">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 651 60" role="img" focusable="false" aria-labelledby="ons-logo-en-alt">
+  <title id="ons-logo-en-alt">Office for National Statistics</title>
   <path
     d="M0,34.6c.8-1.69,1.39-3,2.32-4.6A38.28,38.28,0,0,1,0,23.4V34.6M5,3S0,3,0,9.25v1A62.12,62.12,0,0,0,4.2,27a43.77,43.77,0,0,1,9.42-10.79C21.69,9.21,31.16,5.13,45.9,3Z"
     fill={secondary}

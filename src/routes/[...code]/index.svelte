@@ -21,11 +21,20 @@
 		let geojson = await getTopo(`${base}/data/geo_lad2021.json`, 'geog', fetch);
 		let mapbounds = bbox(geojson);
 
-		let selected = params.code; // GSS code for selected district
-		let place = meta.district.lookup[selected]; // Metadata for selected district
-		let parent = place.parent; // Gets region code for 'selected'
-		let siblings = meta.district.array.filter(d => d.parent == parent).map(d => d.code); // Array of district GSS codes in 'region'
+		let selected = params.code.length > 0 ? params.code.replace('/', ''): null; // GSS code for selected district
+		let place = null; // Metadata for selected district
+		let parent = null; // Gets region code for 'selected'
+		let siblings = null; // Array of district GSS codes in 'region'
 		
+		// Get place data if 'selected' is a valid GSS code
+		if (selected && meta.district.lookup[selected]) {
+			place = meta.district.lookup[selected];
+			parent = place.parent;
+			siblings = meta.district.array.filter(d => d.parent == parent).map(d => d.code);
+		} else if (selected) {
+			selected = null;
+		}
+
 		return {
 				props: {data, meta, geojson, mapbounds, selected, place, parent, siblings}
 		};
@@ -194,15 +203,21 @@
 </script>
 
 <svelte:head>
-  <title>Localised article for {place.name}</title>
-	<meta property="og:url" content="{base}/{selected}" />
-  <meta property="og:title" content="Localised article for {place.name}" />
+  <title>{place ? `Localised article for ${place.name}` : 'Localised article example'}</title>
+	<meta property="og:url" content="{base}{selected ? '/' + selected : ''}" />
+  <meta property="og:title" content="{place ? `Localised article for ${place.name}` : 'Localised article example'}" />
 	<meta property="og:description" content="This is a description of the page." />
 	<meta name="description" content="This is a description of the page." />
 </svelte:head>
 
 <Header theme="dark" bgcolor="#206095" bgfixed={true} center={false} short={true}>
-	<h1>Localised article for {place.name}</h1>
+	<h1 aria-live="assertive">
+		{#if place}
+		Localised article for {place.name}
+		{:else}
+		Localised article template
+		{/if}
+	</h1>
 	<p class="text-big" style="margin-top: 5px">
 		This is a short text description of the article that might take up a couple of lines
 	</p>
@@ -219,14 +234,23 @@
 
 <Filler theme="lightblue" wide={true} center={false}>
 	<p class="text-big">
-		This is a large caption. This template has some captions and selections that are specific to <strong>{place.name}</strong>.
+		{#if place}
+		This is a large text caption. This template has captions and selections that are specific to <strong>{place.name}</strong>.
+		{:else}
+		This is a large text caption. The content of this article will not populate until you select a place.
+		{/if}
 	</p>
 	<p class="text-big">
+		{#if place}
 		<label for="intro-select">Change the selected place using the selection box below.</label>
+		{:else}
+		<label for="intro-select">Choose a place using the selection box below.</label>
+		{/if}
 	</p>
 	<Select id="intro-select" idKey="code" labelKey="name" items={meta.district.array} value={place} on:select={doSelect} isClearable={false}/>
 </Filler>
 
+{#if place}
 <Section>
 	<h2>This is a section title</h2>
 	<p>
@@ -511,9 +535,10 @@
 </Scroller>
 
 <Divider/>
+{/if}
 
 <Section>
-	<h2>Other versions of this article</h2>
+	<h2>{place ? 'Other versions of this article' : 'All versions of this article'}</h2>
 	<p><Icon type="arrow" rotation={showList ? 90 : 0}/> <button class="btn-text" on:click={() => showList = !showList}>{showList ? 'Hide' : 'Show'} list of local authorities</button></p>
 </Section>
 

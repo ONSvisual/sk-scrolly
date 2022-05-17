@@ -7,7 +7,7 @@
     "build": "svelte-kit build && touch build/.nojekyll",
     "package": "svelte-kit package",
     "preview": "svelte-kit preview",
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d build -t true",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. .",
     "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
   },

@@ -14,6 +14,7 @@ const config = {
 		prerender: {
 			default: true,
 			enabled: production,
+			entries: ['/'],
 			onError: 'continue'
 		},
 		paths: {
