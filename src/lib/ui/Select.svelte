@@ -6,6 +6,7 @@
 	const dispatch = createEventDispatcher();
 
 	export let id = "";
+	export let container = undefined;
 	export let mode = "default";
 	export let items;
 	export let placeholder = "Select one...";
@@ -40,7 +41,7 @@
 	const ariaListOpen = (label, count) => `You are currently focused on ${label}. There are ${count} results available.`;
 	const ariaFocused = () => `Select is focused, type to refine list, press down to open the menu.`;
 	
-	$: noOptionsMessage = isWaiting ? "Loading..." : mode == "search" && filterText < 3 ? "Enter 3 or more characters for suggestions" : `No results match ${filterText}`;
+	$: noOptionsMessage = isWaiting ? "Loading..." : mode == "search" && filterText.length < 3 ? "Enter 3 or more characters for suggestions" : `No results match ${filterText}`;
 	$: itemFilter = (Array.isArray(value) && value.length >= maxSelected) || mode == "search" && filterText.length < 3
 	? (label, filterText, option) => false
 	: (label, filterText, option) => `${label}`.split("<")[0].toLowerCase().slice(0, filterText.length) == filterText.toLowerCase();
@@ -50,11 +51,23 @@
 	let listOpen;
 	let isWaiting;
 	let handleClear;
+	
+	const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-	function doSelect(e) {
+	async function doSelect(e) {
 		dispatch("select", e.detail);
 		if (autoClear) {
 			handleClear();
+		} else if (isClearable) {
+			// Hack to allow selection to be cleared by keyboard
+			await sleep(10);
+			let clearSelect = el.getElementsByClassName("clearSelect")[0];
+			if (clearSelect) {
+				clearSelect.tabIndex = 0;
+				clearSelect.onkeypress = (e) => { if (e.key == "Enter") handleClear() };
+				clearSelect.removeAttribute("aria-hidden");
+				clearSelect.setAttribute("aria-label", "Clear selection");
+			}
 		}
 	}
 	
@@ -70,7 +83,7 @@
 
 <div class="selectbox" class:multi-selected={value && isMulti} class:focused={isFocused} class:selected={value && !listOpen && !isMulti} bind:this={el}>
 	<Select
-		{id} {items} {placeholder} {isMulti} {isSearchable}
+		{id} {container} {items} {placeholder} {isMulti} {isSearchable}
 		{groupBy} {loadOptions} {getSelectionLabel} {getOptionLabel} {itemFilter}
 		{ariaValues} {ariaListOpen} {ariaFocused} {noOptionsMessage} {indicatorSvg}
 		{containerStyles}
@@ -169,6 +182,9 @@
 	}
 	:global(.selectbox .clearSelect) {
 		height: 24px;
+	}
+	:global(.selectbox .clearSelect:focus) {
+		outline: 4px solid orange;
 	}
 	:global(.selectbox .indicator) {
 		width: 20px;

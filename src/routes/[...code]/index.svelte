@@ -227,30 +227,30 @@
 	<p>
 		<Toggle mono={true} bind:checked={animation}>Animation {animation ? 'on' : 'off'}</Toggle>
 	</p>
-	<div style="margin-top: 90px;">
+	<div style="margin-top: 55px;">
+		<label for="intro-select">
+			{#if place}
+			Change selected place using the selection box below
+			{:else}
+			Choose a place using the selection box below
+			{/if}
+		</label>
+		<Select id="intro-select" idKey="code" labelKey="name" items={meta.district.array} value={place} on:select={doSelect} isClearable={false} placeholder="Select a local authority..." darkMode/>
+	</div>
+	<div style="margin-top: 25px; height: 80px;">
+		{#if place}
 		<Arrow color="white" {animation}>Scroll to begin</Arrow>
+		{/if}
 	</div>
 </Header>
 
+{#if place}
 <Filler theme="lightblue" wide={true} center={false}>
 	<p class="text-big">
-		{#if place}
 		This is a large text caption. This template has captions and selections that are specific to <strong>{place.name}</strong>.
-		{:else}
-		This is a large text caption. The content of this article will not populate until you select a place.
-		{/if}
 	</p>
-	<p class="text-big">
-		{#if place}
-		<label for="intro-select">Change the selected place using the selection box below.</label>
-		{:else}
-		<label for="intro-select">Choose a place using the selection box below.</label>
-		{/if}
-	</p>
-	<Select id="intro-select" idKey="code" labelKey="name" items={meta.district.array} value={place} on:select={doSelect} isClearable={false}/>
 </Filler>
 
-{#if place}
 <Section>
 	<h2>This is a section title</h2>
 	<p>
