@@ -1,12 +1,12 @@
 <script>
 	import { assets } from "$app/paths";
-  export let color = "black";
-  export let animation = true;
+	export let color = "black";
+	export let animation = true;
 	export let center = true;
 
-  const colors = ["black", "white"];
+	const colors = ["black", "white"];
 
-  color = colors.includes(color) ? color : "black";
+	color = colors.includes(color) ? color : "black";
 </script>
 
 {#if center}
